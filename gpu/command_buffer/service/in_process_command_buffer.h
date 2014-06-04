@@ -1,12 +1,9 @@
 // Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
 #ifndef GPU_COMMAND_BUFFER_SERVICE_IN_PROCESS_COMMAND_BUFFER_H_
 #define GPU_COMMAND_BUFFER_SERVICE_IN_PROCESS_COMMAND_BUFFER_H_
-
 #include <vector>
-
 #include "base/callback.h"
 #include "base/compiler_specific.h"
 #include "base/memory/ref_counted.h"
@@ -21,18 +18,15 @@
 #include "ui/gfx/native_widget_types.h"
 #include "ui/gl/gl_surface.h"
 #include "ui/gl/gpu_preference.h"
-
 namespace base {
 class SequenceChecker;
 }
-
 namespace gfx {
 class GLContext;
 class GLShareGroup;
 class GLSurface;
 class Size;
 }
-
 #if defined(OS_ANDROID)
 namespace gfx {
 class SurfaceTexture;
@@ -41,17 +35,13 @@ namespace gpu {
 class StreamTextureManagerInProcess;
 }
 #endif
-
 namespace gpu {
-
 namespace gles2 {
 class GLES2Decoder;
 }
-
 class GpuMemoryBufferFactory;
 class GpuScheduler;
 class TransferBufferManagerInterface;
-
 // This class provides a thread-safe interface to the global GPU service (for
 // example GPU thread) when being run in single process mode.
 // However, the behavior for accessing one context (i.e. one instance of this
@@ -62,9 +52,7 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   class Service;
   explicit InProcessCommandBuffer(const scoped_refptr<Service>& service);
   virtual ~InProcessCommandBuffer();
-
   static void SetGpuMemoryBufferFactory(GpuMemoryBufferFactory* factory);
-
   // If |surface| is not NULL, use it directly; in this case, the command
   // buffer gpu thread must be the same as the client thread. Otherwise create
   // a new GLSurface.
@@ -77,7 +65,6 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
                   const base::Closure& context_lost_callback,
                   InProcessCommandBuffer* share_group);
   void Destroy();
-
   // CommandBuffer implementation:
   virtual bool Initialize() OVERRIDE;
   virtual State GetState() OVERRIDE;
@@ -95,7 +82,6 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   virtual void SetContextLostReason(
       gpu::error::ContextLostReason reason) OVERRIDE;
   virtual gpu::error::Error GetLastError() OVERRIDE;
-
   // GpuControl implementation:
   virtual gpu::Capabilities GetCapabilities() OVERRIDE;
   virtual gfx::GpuMemoryBuffer* CreateGpuMemoryBuffer(
@@ -115,31 +101,24 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   virtual void SendManagedMemoryStats(const gpu::ManagedMemoryStats& stats)
       OVERRIDE;
   virtual void Echo(const base::Closure& callback) OVERRIDE;
-
   // The serializer interface to the GPU service (i.e. thread).
   class Service {
    public:
     Service();
     virtual ~Service();
-
     virtual void AddRef() const = 0;
     virtual void Release() const = 0;
-
     // Queues a task to run as soon as possible.
     virtual void ScheduleTask(const base::Closure& task) = 0;
-
     // Schedules |callback| to run at an appropriate time for performing idle
     // work.
     virtual void ScheduleIdleWork(const base::Closure& task) = 0;
-
     virtual bool UseVirtualizedGLContexts() = 0;
   };
-
 #if defined(OS_ANDROID)
   scoped_refptr<gfx::SurfaceTexture> GetSurfaceTexture(
       uint32 stream_id);
 #endif
-
  private:
   struct InitializeOnGpuThreadParams {
     bool is_offscreen;
@@ -149,7 +128,6 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
     gfx::GpuPreference gpu_preference;
     gpu::Capabilities* capabilities;  // Ouptut.
     InProcessCommandBuffer* context_group;
-
     InitializeOnGpuThreadParams(bool is_offscreen,
                                 gfx::AcceleratedWidget window,
                                 const gfx::Size& size,
@@ -165,7 +143,6 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
           capabilities(capabilities),
           context_group(share_group) {}
   };
-
   bool InitializeOnGpuThread(const InitializeOnGpuThreadParams& params);
   bool DestroyOnGpuThread();
   void FlushOnGpuThread(int32 put_offset);
@@ -177,16 +154,13 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   void RetireSyncPointOnGpuThread(uint32 sync_point);
   void SignalSyncPointOnGpuThread(uint32 sync_point,
                                   const base::Closure& callback);
-
   // Callbacks:
   void OnContextLost();
   void OnResizeView(gfx::Size size, float scale_factor);
   bool GetBufferChanged(int32 transfer_buffer_id);
   void PumpCommands();
   void ScheduleMoreIdleWork();
-
   static scoped_refptr<Service> GetDefaultService();
-
   // Members accessed on the gpu thread (possibly with the exception of
   // creation):
   bool context_lost_;
@@ -196,12 +170,10 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   scoped_refptr<gfx::GLContext> context_;
   scoped_refptr<gfx::GLSurface> surface_;
   base::Closure context_lost_callback_;
-
   // Members accessed on the client thread:
   State last_state_;
   int32 last_put_offset_;
   gpu::Capabilities capabilities_;
-
   // Accessed on both threads:
   scoped_ptr<CommandBuffer> command_buffer_;
   base::Lock command_buffer_lock_;
@@ -211,21 +183,15 @@ class GPU_EXPORT InProcessCommandBuffer : public CommandBuffer,
   base::Lock state_after_last_flush_lock_;
   scoped_ptr<GpuControl> gpu_control_;
   scoped_refptr<gfx::GLShareGroup> gl_share_group_;
-
 #if defined(OS_ANDROID)
   scoped_refptr<StreamTextureManagerInProcess> stream_texture_manager_;
 #endif
-
   // Only used with explicit scheduling and the gpu thread is the same as
   // the client thread.
   scoped_ptr<base::SequenceChecker> sequence_checker_;
-
   base::WeakPtr<InProcessCommandBuffer> gpu_thread_weak_ptr_;
   base::WeakPtrFactory<InProcessCommandBuffer> gpu_thread_weak_ptr_factory_;
-
   DISALLOW_COPY_AND_ASSIGN(InProcessCommandBuffer);
 };
-
 }  // namespace gpu
-
 #endif  // GPU_COMMAND_BUFFER_SERVICE_IN_PROCESS_COMMAND_BUFFER_H_
